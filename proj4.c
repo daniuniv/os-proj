@@ -20,10 +20,6 @@ void function(const char *dirname) {
 
     // Process each entry.
     while ((pDirent = readdir(pDir)) != NULL) {
-        // Skip '.' and '..' entries.
-        if (strcmp(pDirent->d_name, ".") == 0 || strcmp(pDirent->d_name, "..") == 0)
-            continue;
-
         // Print entry info.
         printf("--------------------\n");
         printf("d_ino:[%ld]\n", pDirent->d_ino);
@@ -35,6 +31,10 @@ void function(const char *dirname) {
 
         // If entry is a directory, recursively call function.
         if (pDirent->d_type == DT_DIR) {
+            // Skip '.' and '..' to avoid infinite loop.
+            if (strcmp(pDirent->d_name, ".") == 0 || strcmp(pDirent->d_name, "..") == 0)
+                continue;
+
             char path[1024];
             snprintf(path, sizeof(path), "%s/%s", dirname, pDirent->d_name);
             function(path);
