@@ -53,6 +53,22 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Open previous snapshot file
+    int prev_snapshot_fd = open("prev_snapshot", O_RDONLY);
+    if (prev_snapshot_fd == -1) {
+        printf("No previous snapshot found. Creating an empty previous snapshot.\n");
+        // Create an empty previous snapshot file
+        prev_snapshot_fd = open("prev_snapshot", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+        if (prev_snapshot_fd == -1) {
+            printf("Error creating previous snapshot.\n");
+            return 1;
+        }
+        close(prev_snapshot_fd);
+    } else {
+        // Close previous snapshot file
+        close(prev_snapshot_fd);
+    }
+
     // Open file for writing (current snapshot)
     int current_snapshot_fd = open("snapshot", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (current_snapshot_fd == -1) {
@@ -66,21 +82,9 @@ int main(int argc, char **argv) {
     // Close current snapshot file
     close(current_snapshot_fd);
 
-    // Open previous snapshot file
-    int prev_snapshot_fd = open("prev_snapshot", O_RDONLY);
+    // If it's the first run, there's no need to compare snapshots
     if (prev_snapshot_fd == -1) {
-        printf("No previous snapshot found. Creating an empty previous snapshot.\n");
-        // Create an empty previous snapshot file
-        prev_snapshot_fd = open("prev_snapshot", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-        if (prev_snapshot_fd == -1) {
-            printf("Error creating previous snapshot.\n");
-            return 1;
-        }
-        close(prev_snapshot_fd);
-        return 0;  // Exit since there's no previous snapshot to compare
-    } else {
-        // Close previous snapshot file
-        close(prev_snapshot_fd);
+        return 0;  
     }
 
     // Compare the two snapshots
