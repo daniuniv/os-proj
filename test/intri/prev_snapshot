@@ -1,42 +1,4 @@
---------------------
-d_off:[3063544227974710433]
-d_reclen:[32]
-d_type:[8]
-d_name:[snapshot]
-Size:[0 bytes]
---------------------
---------------------
-d_off:[4550144456626319859]
-d_reclen:[40]
-d_type:[8]
-d_name:[prev_snapshot]
-Size:[764 bytes]
---------------------
---------------------
-d_off:[8109545299276216094]
-d_reclen:[24]
-d_type:[4]
-d_name:[..]
-Size:[4096 bytes]
---------------------
---------------------
-d_off:[8804810814596430517]
-d_reclen:[24]
-d_type:[4]
-d_name:[.]
-Size:[4096 bytes]
---------------------
---------------------
-d_off:[8916438257117677436]
-d_reclen:[32]
-d_type:[8]
-d_name:[ad.txt]
-Size:[0 bytes]
---------------------
---------------------
-d_off:[9223372036854775807]
-d_reclen:[32]
-d_type:[8]
-d_name:[da.txt]
-Size:[0 bytes]
---------------------
+  - [snapshot] (Size: 0 bytes, d_off:[3063544227974710433], d_reclen:[32], d_type:[8])
+  - [prev_snapshot] (Size: 351 bytes, d_off:[4550144456626319859], d_reclen:[40], d_type:[8])
+  - [ad.txt] (Size: 0 bytes, d_off:[8916438257117677436], d_reclen:[32], d_type:[8])
+  - [da.txt] (Size: 0 bytes, d_off:[9223372036854775807], d_reclen:[32], d_type:[8])

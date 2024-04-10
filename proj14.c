@@ -9,7 +9,7 @@
 
 #define BUFFER_SIZE 1024
 
-void function(const char *dirname, int output_fd) {
+void function(const char *dirname, int output_fd, int depth) {
     struct dirent *pDirent;
     DIR *pDir;
 
@@ -24,40 +24,51 @@ void function(const char *dirname, int output_fd) {
 
     // Process each entry.
     while ((pDirent = readdir(pDir)) != NULL) {
-        // Print entry name and size.
-        char entry_info[500];
-        char entry_path[1024];
-        snprintf(entry_path, sizeof(entry_path), "%s/%s", dirname, pDirent->d_name);
-        struct stat st;
-        if (stat(entry_path, &st) == 0) {
-            sprintf(entry_info, "--------------------\n"
-                                "d_off:[%ld]\n"
-                                "d_reclen:[%d]\n"
-                                "d_type:[%d]\n"
-                                "d_name:[%s]\n"
-                                "Size:[%ld bytes]\n"
-                                "--------------------\n",
-                    pDirent->d_off, pDirent->d_reclen, pDirent->d_type, pDirent->d_name, st.st_size);
-            write(output_fd, entry_info, strlen(entry_info));
-        } else {
-            perror("Error getting file information");
-        }
-        
         // If entry is a directory, recursively call function.
         if (pDirent->d_type == DT_DIR) {
             // Skip '.' and '..' to avoid infinite loop.
             if (strcmp(pDirent->d_name, ".") == 0 || strcmp(pDirent->d_name, "..") == 0)
                 continue;
 
+            // Add indentation based on depth
+            for (int i = 0; i < depth; i++) {
+                write(output_fd, "  ", 2);
+            }
+
+            // Add '-' for directories
+            write(output_fd, "- ", 2);
+            write(output_fd, pDirent->d_name, strlen(pDirent->d_name));
+            write(output_fd, "\n", 1);
+
+            // Recursively call function for the directory.
             char path[1024];
             snprintf(path, sizeof(path), "%s/%s", dirname, pDirent->d_name);
-            function(path, output_fd);
+            function(path, output_fd, depth + 1);
+        } else {
+            // Print file information with indentation.
+            char entry_info[500];
+            char entry_path[1024];
+            snprintf(entry_path, sizeof(entry_path), "%s/%s", dirname, pDirent->d_name);
+            struct stat st;
+            if (stat(entry_path, &st) == 0) {
+                // Add indentation based on depth
+                for (int i = 0; i < depth; i++) {
+                    write(output_fd, "  ", 2);
+                }
+
+                // Print file information
+                sprintf(entry_info, "- [%s] (Size: %ld bytes, d_off:[%ld], d_reclen:[%d], d_type:[%d])\n", pDirent->d_name, st.st_size, pDirent->d_off, pDirent->d_reclen, pDirent->d_type);
+                write(output_fd, entry_info, strlen(entry_info));
+            } else {
+                perror("Error getting file information");
+            }
         }
     }
 
     // Close directory.
     closedir(pDir);
 }
+
 
 
 
@@ -131,7 +142,7 @@ int main(int argc, char **argv) {
         }
 
         // Call function with specified directory to create current snapshot.
-        function(dirname, current_snapshot_fd);
+        function(dirname, current_snapshot_fd, 1);
 
         // Close current snapshot file
         close(current_snapshot_fd);
