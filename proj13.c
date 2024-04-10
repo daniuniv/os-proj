@@ -24,11 +24,24 @@ void function(const char *dirname, int output_fd) {
 
     // Process each entry.
     while ((pDirent = readdir(pDir)) != NULL) {
-        // Print entry name.
+        // Print entry name and size.
         char entry_info[500];
-        sprintf(entry_info, "--------------------\nd_off:[%ld]\nd_reclen:[%d]\nd_type:[%d]\nd_name:[%s]\n--------------------\n",
-                pDirent->d_off, pDirent->d_reclen, pDirent->d_type, pDirent->d_name);
-        write(output_fd, entry_info, strlen(entry_info));
+        char entry_path[1024];
+        snprintf(entry_path, sizeof(entry_path), "%s/%s", dirname, pDirent->d_name);
+        struct stat st;
+        if (stat(entry_path, &st) == 0) {
+            sprintf(entry_info, "--------------------\n"
+                                "d_off:[%ld]\n"
+                                "d_reclen:[%d]\n"
+                                "d_type:[%d]\n"
+                                "d_name:[%s]\n"
+                                "Size:[%ld bytes]\n"
+                                "--------------------\n",
+                    pDirent->d_off, pDirent->d_reclen, pDirent->d_type, pDirent->d_name, st.st_size);
+            write(output_fd, entry_info, strlen(entry_info));
+        } else {
+            perror("Error getting file information");
+        }
         
         // If entry is a directory, recursively call function.
         if (pDirent->d_type == DT_DIR) {
@@ -45,6 +58,7 @@ void function(const char *dirname, int output_fd) {
     // Close directory.
     closedir(pDir);
 }
+
 
 
 int compare_files(const char *file1, const char *file2) {
