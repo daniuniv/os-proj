@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #define BUFFER_SIZE 1024
 
@@ -40,10 +41,21 @@ void function(const char *dirname, int output_fd, int depth) {
             write(output_fd, pDirent->d_name, strlen(pDirent->d_name));
             write(output_fd, "\n", 1);
 
-            // Recursively call function for the directory.
+            // Recursively call function for the directory using a child process
             char path[1024];
             snprintf(path, sizeof(path), "%s/%s", dirname, pDirent->d_name);
-            function(path, output_fd, depth + 1);
+            pid_t child_pid = fork();
+            if (child_pid == 0) { // Child process
+                function(path, output_fd, depth + 1);
+                exit(0);
+            } else if (child_pid > 0) { // Parent process
+                // Wait for child process to finish before continuing
+                int status;
+                wait(&status);
+            } else {
+                perror("Error creating child process");
+                exit(1);
+            }
         } else {
             // Print file information with indentation.
             char entry_info[500];

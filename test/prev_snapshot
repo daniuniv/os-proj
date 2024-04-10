@@ -6,4 +6,4 @@
     - [ad.txt] (Size: 0 bytes, d_off:[8916438257117677436], d_reclen:[32], d_type:[8])
     - [da.txt] (Size: 0 bytes, d_off:[9223372036854775807], d_reclen:[32], d_type:[8])
   - [bb.txt] (Size: 0 bytes, d_off:[7872574123740921009], d_reclen:[32], d_type:[8])
-  - [a.txt] (Size: 3 bytes, d_off:[8109545299276216094], d_reclen:[32], d_type:[8])
+  - [a.txt] (Size: 4 bytes, d_off:[8109545299276216094], d_reclen:[32], d_type:[8])
