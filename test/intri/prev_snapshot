@@ -1,4 +1,4 @@
-  - [snapshot] (Size: 0 bytes, d_off:[3063544227974710433], d_reclen:[32], d_type:[8])
-  - [prev_snapshot] (Size: 351 bytes, d_off:[4550144456626319859], d_reclen:[40], d_type:[8])
-  - [ad.txt] (Size: 0 bytes, d_off:[8916438257117677436], d_reclen:[32], d_type:[8])
-  - [da.txt] (Size: 0 bytes, d_off:[9223372036854775807], d_reclen:[32], d_type:[8])
+    - [snapshot] (Size: 2 bytes, d_off:[3063544227974710433], d_reclen:[32], d_type:[8])
+    - [prev_snapshot] (Size: 363 bytes, d_off:[4550144456626319859], d_reclen:[40], d_type:[8])
+        - [ad.txt] (Size: 0 bytes, d_off:[8916438257117677436], d_reclen:[32], d_type:[8])
+    - [da.txt] (Size: 0 bytes, d_off:[9223372036854775807], d_reclen:[32], d_type:[8])

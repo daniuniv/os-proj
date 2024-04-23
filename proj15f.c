@@ -25,60 +25,101 @@ void function(const char *dirname, int output_fd, int depth) {
 
     // Process each entry.
     while ((pDirent = readdir(pDir)) != NULL) {
+        // Construct full path
+        char path[1024];
+        snprintf(path, sizeof(path), "%s/%s", dirname, pDirent->d_name);
+
+        // Add indentation based on depth
+        for (int i = 0; i < depth; i++) {
+            write(output_fd, "  ", 2);
+        }
+
         // If entry is a directory, recursively call function.
         if (pDirent->d_type == DT_DIR) {
             // Skip '.' and '..' to avoid infinite loop.
-            if (strcmp(pDirent->d_name, ".") == 0 || strcmp(pDirent->d_name, "..") == 0)
+            if (strcmp(pDirent->d_name, ".") == 0 || strcmp(pDirent->d_name, "..") == 0|| strcmp(pDirent->d_name, "contaminated") == 0)
                 continue;
 
-            // Add indentation based on depth
-            for (int i = 0; i < depth; i++) {
-                write(output_fd, "  ", 2);
-            }
-
-            // Add '-' for directories
             write(output_fd, "- ", 2);
             write(output_fd, pDirent->d_name, strlen(pDirent->d_name));
             write(output_fd, "\n", 1);
 
-            // Recursively call function for the directory using a child process
-            char path[1024];
-            snprintf(path, sizeof(path), "%s/%s", dirname, pDirent->d_name);
             pid_t child_pid = fork();
             if (child_pid == 0) { // Child process
                 function(path, output_fd, depth + 1);
                 exit(0);
             } else if (child_pid > 0) { // Parent process
-                // Wait for child process to finish before continuing
                 int status;
                 wait(&status);
             } else {
                 perror("Error creating child process");
                 exit(1);
             }
-        } else {
+        } 
+        // If entry is a regular file, check for corruption.
+        else if (pDirent->d_type == DT_REG && strcmp(pDirent->d_name, "corruption_check.sh") != 0) {
+            check_corruption(path, dirname);
+            
             // Print file information with indentation.
-            char entry_info[500];
-            char entry_path[1024];
-            snprintf(entry_path, sizeof(entry_path), "%s/%s", dirname, pDirent->d_name);
-            struct stat st;
-            if (stat(entry_path, &st) == 0) {
-                // Add indentation based on depth
-                for (int i = 0; i < depth; i++) {
-                    write(output_fd, "  ", 2);
-                }
-
-                // Print file information
-                sprintf(entry_info, "- [%s] (Size: %ld bytes, d_off:[%ld], d_reclen:[%d], d_type:[%d])\n", pDirent->d_name, st.st_size, pDirent->d_off, pDirent->d_reclen, pDirent->d_type);
-                write(output_fd, entry_info, strlen(entry_info));
-            } else {
-                perror("Error getting file information");
-            }
+            print_file_info(pDirent, path, output_fd, depth);
         }
     }
 
     // Close directory.
     closedir(pDir);
+}
+
+void check_corruption(const char *file_path, const char *dirname) {
+    struct stat st;
+    if (stat(file_path, &st) == 0) {
+        if ((st.st_mode & S_IRUSR) == 0 || (st.st_mode & S_IWUSR) == 0) {
+            // Create "contaminated" directory if it doesn't exist
+            char contaminated_dir[1024];
+            snprintf(contaminated_dir, sizeof(contaminated_dir), "%s/contaminated", dirname);
+            mkdir(contaminated_dir, S_IRWXU);
+
+            // Create and write to the shell script
+            char script_path[1024];
+            snprintf(script_path, sizeof(script_path), "%s/corruption_check.sh", dirname);
+            
+            FILE *script_file = fopen(script_path, "w");
+            if (script_file == NULL) {
+                perror("Error creating shell script");
+                exit(1);
+            }
+            
+            fprintf(script_file, "#!/bin/bash\n");
+            fprintf(script_file, "mv \"%s\" \"%s/contaminated/\"\n", file_path, dirname);
+            
+            fclose(script_file);
+
+            // Make the script executable
+            chmod(script_path, S_IRWXU);
+
+            // Execute the shell script
+            if (system(script_path) == -1) {
+                perror("Error executing shell script");
+                exit(1);
+            }
+        }
+    } 
+}
+
+
+
+void print_file_info(struct dirent *pDirent, const char *path, int output_fd, int depth) {
+    char entry_info[500];
+    struct stat st;
+    if (stat(path, &st) == 0) {
+        // Add indentation based on depth
+        for (int i = 0; i < depth; i++) {
+            write(output_fd, "  ", 2);
+        }
+
+        // Print file information
+        sprintf(entry_info, "- [%s] (Size: %ld bytes, d_off:[%ld], d_reclen:[%d], d_type:[%d])\n", pDirent->d_name, st.st_size, pDirent->d_off, pDirent->d_reclen, pDirent->d_type);
+        write(output_fd, entry_info, strlen(entry_info));
+    } 
 }
 
 
