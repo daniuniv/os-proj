@@ -1,2 +1,2 @@
 #!/bin/bash
-mv "/home/tiege/Desktop/os/proj/test//ddd.c" "/home/tiege/Desktop/os/proj/test//contaminated/"
+mv "/home/tiege/Desktop/os/proj/test//da.txt" "/home/tiege/Desktop/os/proj/test//contaminated/"

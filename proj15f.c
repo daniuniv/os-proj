@@ -10,6 +10,57 @@
 
 #define BUFFER_SIZE 1024
 
+void check_corruption(const char *file_path, const char *dirname) {
+    struct stat st;
+    if (stat(file_path, &st) == 0) {
+        if ((st.st_mode & S_IRUSR) == 0 || (st.st_mode & S_IWUSR) == 0) {
+            // Create "contaminated" directory if it doesn't exist
+            char contaminated_dir[1024];
+            snprintf(contaminated_dir, sizeof(contaminated_dir), "%s/contaminated", dirname);
+            mkdir(contaminated_dir, S_IRWXU);
+
+            // Create and write to the shell script
+            char script_path[1024];
+            snprintf(script_path, sizeof(script_path), "%s/corruption_check.sh", dirname);
+            
+            FILE *script_file = fopen(script_path, "w");
+            if (script_file == NULL) {
+                perror("Error creating shell script");
+                exit(1);
+            }
+            
+            fprintf(script_file, "#!/bin/bash\n");
+            fprintf(script_file, "mv \"%s\" \"%s/contaminated/\"\n", file_path, dirname);
+            
+            fclose(script_file);
+
+            // Make the script executable
+            chmod(script_path, S_IRWXU);
+
+            // Execute the shell script
+            if (system(script_path) == -1) {
+                perror("Error executing shell script");
+                exit(1);
+            }
+        }
+    } 
+}
+
+void print_file_info(struct dirent *pDirent, const char *path, int output_fd, int depth) {
+    char entry_info[500];
+    struct stat st;
+    if (stat(path, &st) == 0) {
+        // Add indentation based on depth
+        for (int i = 0; i < depth; i++) {
+            write(output_fd, "  ", 2);
+        }
+
+        // Print file information
+        sprintf(entry_info, "- [%s] (Size: %ld bytes, d_off:[%ld], d_reclen:[%d], d_type:[%d])\n", pDirent->d_name, st.st_size, pDirent->d_off, pDirent->d_reclen, pDirent->d_type);
+        write(output_fd, entry_info, strlen(entry_info));
+    } 
+}
+
 void function(const char *dirname, int output_fd, int depth) {
     struct dirent *pDirent;
     DIR *pDir;
@@ -69,60 +120,6 @@ void function(const char *dirname, int output_fd, int depth) {
     closedir(pDir);
 }
 
-void check_corruption(const char *file_path, const char *dirname) {
-    struct stat st;
-    if (stat(file_path, &st) == 0) {
-        if ((st.st_mode & S_IRUSR) == 0 || (st.st_mode & S_IWUSR) == 0) {
-            // Create "contaminated" directory if it doesn't exist
-            char contaminated_dir[1024];
-            snprintf(contaminated_dir, sizeof(contaminated_dir), "%s/contaminated", dirname);
-            mkdir(contaminated_dir, S_IRWXU);
-
-            // Create and write to the shell script
-            char script_path[1024];
-            snprintf(script_path, sizeof(script_path), "%s/corruption_check.sh", dirname);
-            
-            FILE *script_file = fopen(script_path, "w");
-            if (script_file == NULL) {
-                perror("Error creating shell script");
-                exit(1);
-            }
-            
-            fprintf(script_file, "#!/bin/bash\n");
-            fprintf(script_file, "mv \"%s\" \"%s/contaminated/\"\n", file_path, dirname);
-            
-            fclose(script_file);
-
-            // Make the script executable
-            chmod(script_path, S_IRWXU);
-
-            // Execute the shell script
-            if (system(script_path) == -1) {
-                perror("Error executing shell script");
-                exit(1);
-            }
-        }
-    } 
-}
-
-
-
-void print_file_info(struct dirent *pDirent, const char *path, int output_fd, int depth) {
-    char entry_info[500];
-    struct stat st;
-    if (stat(path, &st) == 0) {
-        // Add indentation based on depth
-        for (int i = 0; i < depth; i++) {
-            write(output_fd, "  ", 2);
-        }
-
-        // Print file information
-        sprintf(entry_info, "- [%s] (Size: %ld bytes, d_off:[%ld], d_reclen:[%d], d_type:[%d])\n", pDirent->d_name, st.st_size, pDirent->d_off, pDirent->d_reclen, pDirent->d_type);
-        write(output_fd, entry_info, strlen(entry_info));
-    } 
-}
-
-
 
 
 int compare_files(const char *file1, const char *file2) {
@@ -163,6 +160,11 @@ int main(int argc, char **argv) {
         printf("Usage: testprog <dirname1> <dirname2> ...\n");
         return 1;
     }
+    if (argc > 11) {
+        printf("Too many command line arguments(directories), it should be less then 10 ... \n");
+        return 1;
+    }
+    printf("\n%d\n",argc);
 
     for (int i = 1; i < argc; i++) {
         const char *dirname = argv[i];
