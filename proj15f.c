@@ -161,10 +161,9 @@ int main(int argc, char **argv) {
         return 1;
     }
     if (argc > 11) {
-        printf("Too many command line arguments(directories), it should be less then 10 ... \n");
+        printf("Too many command line arguments(directories), it shouldn't exceed 10 ... \n");
         return 1;
     }
-    printf("\n%d\n",argc);
 
     for (int i = 1; i < argc; i++) {
         const char *dirname = argv[i];
