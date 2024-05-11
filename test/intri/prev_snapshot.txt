@@ -1,7 +1,8 @@
- |_fasfafs
+ |âfasfafs
   | [ddd.c] (Size: 0 bytes, d_off:[9174172504859734162], d_reclen:[32], d_type:[8])
   | [dasdasdas.c] (Size: 0 bytes, d_off:[9223372036854775807], d_reclen:[32], d_type:[8])
  | [asfasfas.txt] (Size: 0 bytes, d_off:[4185801787404915395], d_reclen:[32], d_type:[8])
+ | [snapshot.txt] (Size: 275 bytes, d_off:[4257088161871266488], d_reclen:[32], d_type:[8])
  | [prev_snapshot.txt] (Size: 632 bytes, d_off:[4550144456626319859], d_reclen:[40], d_type:[8])
  | [ad.txt] (Size: 0 bytes, d_off:[8916438257117677436], d_reclen:[32], d_type:[8])
  | [da.txt] (Size: 0 bytes, d_off:[8963500639284423142], d_reclen:[32], d_type:[8])

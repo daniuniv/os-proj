@@ -109,14 +109,16 @@ void print_file_info(struct dirent *pDirent, const char *path, int output_fd, in
     char entry_info[500];
     struct stat st;
     if (stat(path, &st) == 0) {
-        // Add indentation based on depth
-        for (int i = 0; i < depth; i++) {
-            write(output_fd, "  ", 2);
-        }
 
         // Print file information
-        sprintf(entry_info, "- [%s] (Size: %ld bytes, d_off:[%ld], d_reclen:[%d], d_type:[%d])\n", pDirent->d_name, st.st_size, pDirent->d_off, pDirent->d_reclen, pDirent->d_type);
-        write(output_fd, entry_info, strlen(entry_info));
+        if(strcmp(pDirent->d_name,"prev_snapshot") != 0 && strcmp(pDirent->d_name,"snapshot") != 0){
+            // Add indentation based on depth
+            for (int i = 0; i < depth; i++) {
+            write(output_fd, " ", 1);
+            }
+            sprintf(entry_info, "| [%s] (Size: %ld bytes, d_off:[%ld], d_reclen:[%d], d_type:[%d])\n", pDirent->d_name, st.st_size, pDirent->d_off, pDirent->d_reclen, pDirent->d_type);
+            write(output_fd, entry_info, strlen(entry_info));
+        }
     } 
 }
 
@@ -139,18 +141,17 @@ void function(const char *dirname, int output_fd, int depth) {
         char path[1024];
         snprintf(path, sizeof(path), "%s/%s", dirname, pDirent->d_name);
 
-        // Add indentation based on depth
-        for (int i = 0; i < depth; i++) {
-            write(output_fd, "  ", 2);
-        }
-
         // If entry is a directory, recursively call function.
         if (pDirent->d_type == DT_DIR) {
             // Skip '.' and '..' to avoid infinite loop.
             if (strcmp(pDirent->d_name, ".") == 0 || strcmp(pDirent->d_name, "..") == 0|| strcmp(pDirent->d_name, "contaminated") == 0)
                 continue;
 
-            write(output_fd, "- ", 2);
+            // // // Add indentation based on depth
+            for (int i = 0; i < depth; i++) {
+                write(output_fd, " ", 1);
+            }
+            write(output_fd, "|_", 2);
             write(output_fd, pDirent->d_name, strlen(pDirent->d_name));
             write(output_fd, "\n", 1);
 

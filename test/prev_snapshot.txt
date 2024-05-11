@@ -1,8 +1,9 @@
  | [im.c] (Size: 0 bytes, d_off:[2447184126087537285], d_reclen:[24], d_type:[8])
- | [sdlkmgsd.txt] (Size: 0 bytes, d_off:[2627640390196058936], d_reclen:[32], d_type:[8])
+ | [sdlkmgsd.txt] (Size: 0 bytes, d_off:[3063544227974710433], d_reclen:[32], d_type:[8])
+ | [snapshot.txt] (Size: 172 bytes, d_off:[4257088161871266488], d_reclen:[32], d_type:[8])
  | [prev_snapshot.txt] (Size: 1085 bytes, d_off:[4550144456626319859], d_reclen:[40], d_type:[8])
- |_intri
-  |_fasfafs
+ |âintri
+  |âfasfafs
    | [ddd.c] (Size: 0 bytes, d_off:[9174172504859734162], d_reclen:[32], d_type:[8])
    | [dasdasdas.c] (Size: 0 bytes, d_off:[9223372036854775807], d_reclen:[32], d_type:[8])
   | [asfasfas.txt] (Size: 0 bytes, d_off:[4185801787404915395], d_reclen:[32], d_type:[8])
