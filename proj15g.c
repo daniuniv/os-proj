@@ -13,8 +13,15 @@
 void check_corruption(const char *file_path, const char *dirname) {
     struct stat st;
     if (stat(file_path, &st) == 0) {
+        // Check if permissions are missing
         if ((st.st_mode & S_IRUSR) == 0 || (st.st_mode & S_IWUSR) == 0) {
-            // Create "contaminated" directory if it doesn't exist
+            // Attempt to grant read and write permissions
+            if (chmod(file_path, S_IRUSR | S_IWUSR) == -1) {
+                perror("Error granting permissions to the file");
+                return; // Exit the function without further action
+            }
+        
+            // Create the contaminated directory if it doesn't exist
             char contaminated_dir[1024];
             snprintf(contaminated_dir, sizeof(contaminated_dir), "%s/contaminated", dirname);
             mkdir(contaminated_dir, S_IRWXU);
@@ -22,15 +29,65 @@ void check_corruption(const char *file_path, const char *dirname) {
             // Create and write to the shell script
             char script_path[1024];
             snprintf(script_path, sizeof(script_path), "%s/corruption_check.sh", dirname);
-            
+        
             FILE *script_file = fopen(script_path, "w");
             if (script_file == NULL) {
                 perror("Error creating shell script");
-                exit(1);
+                return; // Exit the function without further action
             }
-            
+        
             fprintf(script_file, "#!/bin/bash\n");
-            fprintf(script_file, "mv \"%s\" \"%s/contaminated/\"\n", file_path, dirname);
+            fprintf(script_file, "\n");
+            fprintf(script_file, "# File path and directory name\n");
+            fprintf(script_file, "file=\"%s\"\n", file_path);
+            fprintf(script_file, "dirname=\"%s\"\n", dirname);
+            fprintf(script_file, "\n");
+            fprintf(script_file, "# Debugging message\n");
+            fprintf(script_file, "echo \"Script started for $file\"\n");
+            fprintf(script_file, "\n");
+            fprintf(script_file, "# Define thresholds\n");
+            fprintf(script_file, "MIN_LINES=3\n");
+            fprintf(script_file, "MAX_WORDS=1000\n");
+            fprintf(script_file, "MAX_CHARACTERS=2000\n");
+            fprintf(script_file, "\n");
+            fprintf(script_file, "# Function to count lines, words, characters, non-ASCII, and specific keywords in a file\n");
+            fprintf(script_file, "count_stats() {\n");
+            fprintf(script_file, "    if [[ $(tail -c 1 \"$file\") != $'\\n' ]]; then\n");
+            fprintf(script_file, "        echo >> \"$file\"\n");
+            fprintf(script_file, "    fi\n");
+            fprintf(script_file, "    local file=\"$1\"\n");
+            fprintf(script_file, "    local lines=$(wc -l < \"$file\")\n");
+            fprintf(script_file, "    local words=$(wc -w < \"$file\")\n");
+            fprintf(script_file, "    local characters=$(wc -c < \"$file\")\n");
+            fprintf(script_file, "    local non_ascii=$(grep -P \"[^\\x00-\\x7F]\" \"$file\" | wc -l)\n");
+            fprintf(script_file, "    local keywords=(\"corrupted\" \"dangerous\" \"risk\" \"attack\" \"malware\" \"malicious\")\n");
+            fprintf(script_file, "    local keyword_count=0\n");
+            fprintf(script_file, "    for keyword in \"${keywords[@]}\"; do\n");
+            fprintf(script_file, "        keyword_count=$((keyword_count + $(grep -oi \"$keyword\" \"$file\" | wc -l)))\n");
+            fprintf(script_file, "    done\n");
+            fprintf(script_file, "    echo \"$lines $words $characters $non_ascii $keyword_count\"\n");
+            fprintf(script_file, "}\n");
+            fprintf(script_file, "# Function to move file to contaminated folder\n");
+            fprintf(script_file, "move_to_contaminated() {\n");
+            fprintf(script_file, "    local file=\"$1\"\n");
+            fprintf(script_file, "    local dirname=\"$2\"\n");
+            fprintf(script_file, "    mkdir -p \"$dirname/contaminated\"\n");
+            fprintf(script_file, "    mv \"$file\" \"$dirname/contaminated/\"\n");
+            fprintf(script_file, "}\n");
+            fprintf(script_file, "\n");
+            fprintf(script_file, "# Main script execution\n");
+            fprintf(script_file, "# Count lines, words, characters, non-ASCII, and specific keywords\n");
+            fprintf(script_file, "stats=$(count_stats \"$file\")\n");
+            fprintf(script_file, "read -r lines words characters non_ascii keyword_count <<< \"$stats\"\n");
+            fprintf(script_file, "\n");
+            fprintf(script_file, "# Debugging message\n");
+            fprintf(script_file, "echo \"File stats: $lines lines, $words words, $characters characters, $non_ascii non-ASCII characters, $keyword_count keywords found\"\n");
+            fprintf(script_file, "\n");
+            fprintf(script_file, "# Check conditions and move file if necessary\n");
+            fprintf(script_file, "if (( lines < MIN_LINES )) && (( words > MAX_WORDS )) && (( characters > MAX_CHARACTERS )) || (( non_ascii > 0 )) || (( keyword_count > 0 )); then\n");
+            fprintf(script_file, "    move_to_contaminated \"$file\" \"$dirname\"\n");
+            fprintf(script_file, "    echo \"File moved to contaminated directory\"\n");
+            fprintf(script_file, "fi\n");
             
             fclose(script_file);
 
@@ -40,11 +97,13 @@ void check_corruption(const char *file_path, const char *dirname) {
             // Execute the shell script
             if (system(script_path) == -1) {
                 perror("Error executing shell script");
-                exit(1);
             }
         }
-    } 
+    } else {
+        perror("Error checking file permissions");
+    }
 }
+
 
 void print_file_info(struct dirent *pDirent, const char *path, int output_fd, int depth) {
     char entry_info[500];
